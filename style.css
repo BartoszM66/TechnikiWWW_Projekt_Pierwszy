@@ -1,0 +1,240 @@
+/* --- 1. ZMIENNE I GLOBALNY RESET --- */
+:root {
+    --bg-color: #121212;
+    --bg-secondary: #1e1e1e;
+    --text-main: #f0f0f0;
+    --text-muted: #aaaaaa;
+    --accent: #bfff00;
+    --font-main: 'Montserrat', sans-serif;
+    --modal-bg: rgba(0, 0, 0, 0.95);
+    --nav-height: 80px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--font-main);
+    color: var(--text-main);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(circle at 50% 0%, #2a2a2a 0%, #121212 75%);
+    background-attachment: fixed;
+}
+
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+.hidden-trigger { display: none; }
+
+/* --- 2. MENU NAWIGACYJNE --- */
+.navbar {
+    height: var(--nav-height);
+    background-color: rgba(18, 18, 18, 0.95);
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    backdrop-filter: blur(5px);
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.nav-container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+
+.logo { font-size: 1.6rem; font-weight: 900; letter-spacing: 1px; white-space: nowrap; }
+.logo span { color: var(--accent); }
+
+.nav-links { display: flex; gap: 30px; }
+.nav-links a { font-weight: 500; transition: 0.3s; font-size: 0.95rem; text-transform: uppercase; }
+.nav-links a:hover, .nav-links a.active { color: var(--accent); }
+
+.hamburger { display: none; cursor: pointer; flex-direction: column; gap: 6px; }
+.line { width: 28px; height: 3px; background: #fff; transition: 0.3s; border-radius: 2px; }
+
+/* --- 3. UKŁAD TREŚCI --- */
+.page-content { flex: 1; margin-top: 20px; }
+.section-padding { padding: 80px 0; }
+.section-title { font-size: 2.5rem; text-align: center; margin-bottom: 60px; text-transform: uppercase; letter-spacing: 2px; }
+.section-title::after { content: ''; display: block; width: 60px; height: 3px; background: var(--accent); margin: 15px auto 0; }
+
+/* --- 4. STRONA GŁÓWNA --- */
+.hero-section {
+    height: calc(100vh - var(--nav-height));
+    background: url('img/background.jpg') center/cover no-repeat;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(18,18,18,1)); }
+.hero-content { position: relative; z-index: 2; padding: 20px; max-width: 800px; }
+.hero-content h1 { font-size: 3.5rem; margin-bottom: 20px; text-shadow: 0 2px 20px rgba(0,0,0,0.8); line-height: 1.1; }
+.hero-content p { font-size: 1.2rem; color: #ddd; }
+.hero-content .btn { margin-top: 40px; }
+
+/* --- 5. OFERTA  --- */
+.offer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.offer-card {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.offer-card:hover {
+    transform: translateY(-7px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 30px rgba(191, 255, 0, 0.15);
+}
+
+.card-image {
+    width: 100%;
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.offer-card h3 { margin-bottom: 10px; font-size: 1.3rem; }
+.btn-small { margin-top: auto; align-self: center; font-size: 0.8rem; padding: 10px 25px; }
+
+/* --- 6. O NAS  --- */
+.about-flex { display: flex; align-items: center; gap: 60px; }
+.about-text, .about-image { flex: 1; }
+.about-text p { margin-bottom: 20px; font-size: 1.05rem; color: #ccc; }
+.about-image img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 20px 20px 0 rgba(255,255,255,0.05);
+    filter: grayscale(30%);
+    transition: 0.4s;
+}
+.about-image img:hover { filter: grayscale(0%); }
+
+/* --- 7. KONTAKT  --- */
+.contact-center { text-align: center; max-width: 800px; margin: 0 auto; }
+.contact-info {
+    margin-bottom: 40px; padding: 30px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+.contact-info p { font-size: 1.2rem; margin: 15px 0; }
+
+.form-group { margin-bottom: 20px; text-align: left; position: relative; }
+.form-group label { display: block; margin-bottom: 8px; color: var(--accent); font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
+.form-group-row { display: flex; gap: 20px; }
+
+input, select, textarea {
+    width: 100%; padding: 14px; background: #0a0a0a; border: 1px solid #333;
+    color: #fff; border-radius: 4px; font-family: inherit; outline: none; transition: 0.3s; font-size: 0.95rem;
+}
+textarea { resize: vertical; min-height: 120px; }
+
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input:required:valid, select:required:valid, textarea:required:valid { border-color: #28a745; }
+input:focus:invalid { border-color: #dc3545; }
+
+.validation-msg { font-size: 0.75rem; color: #dc3545; position: absolute; bottom: -20px; left: 0; opacity: 0; transition: 0.3s; }
+input:focus:invalid + .validation-msg, textarea:focus:invalid + .validation-msg { opacity: 1; }
+
+/* --- 8. PRZYCISKI  --- */
+.btn {
+    display: inline-block; padding: 14px 35px; border: 2px solid var(--accent);
+    color: var(--accent); font-weight: 700; text-transform: uppercase; cursor: pointer;
+    transition: 0.3s; position: relative; overflow: hidden; z-index: 1; letter-spacing: 1px;
+}
+.btn::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 0; height: 100%;
+    background: var(--accent); z-index: -1; transition: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.btn:hover::before { width: 100%; }
+.btn:hover { color: #000; }
+
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { background: transparent; color: var(--accent); }
+.btn-primary:hover::before { width: 0; }
+.btn-full { width: 100%; border: none; margin-top: 10px; font-size: 1rem; }
+
+/* --- 9. MODALE  --- */
+.modal-overlay {
+    position: fixed; inset: 0; background: var(--modal-bg);
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none; transition: 0.3s; z-index: 2000;
+    backdrop-filter: blur(8px);
+}
+.modal-content {
+    background: var(--bg-secondary); padding: 40px; border-radius: 8px;
+    width: 90%; max-width: 600px; border: 1px solid var(--accent);
+    transform: scale(0.9); transition: 0.3s; position: relative;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    max-height: 90vh; overflow-y: auto;
+}
+.modal-content h3 {
+    margin-bottom: 20px;
+}
+.modal-close {
+    position: absolute; top: 15px; right: 20px; font-size: 2.5rem;
+    color: #fff; cursor: pointer; transition: 0.3s; line-height: 1;
+}
+.modal-close:hover { color: var(--accent); transform: rotate(90deg); }
+.modal-list li { margin-bottom: 8px; padding-left: 15px; }
+
+.target-modal:target { opacity: 1; pointer-events: all; }
+.target-modal:target .modal-content { transform: scale(1); }
+#contact-modal-toggle:checked ~ .checkbox-modal { opacity: 1; pointer-events: all; }
+#contact-modal-toggle:checked ~ .checkbox-modal .modal-content { transform: scale(1); }
+
+/* --- 10. ANIMACJE --- */
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+@keyframes slideUp { from {opacity:0; transform:translateY(40px);} to {opacity:1; transform:translateY(0);} }
+.anim-fade-in { animation: fadeIn 1.2s forwards; }
+.anim-slide-up { animation: slideUp 0.8s forwards 0.3s; opacity: 0; }
+.delay-1 { animation-delay: 0.6s; }
+
+/* --- 11. STOPKA --- */
+.footer { background: #000; padding: 30px; text-align: center; margin-top: auto; color: #666; font-size: 0.85rem; border-top: 1px solid #222; }
+
+/* --- 12. RESPONSYWNOŚĆ  --- */
+@media (max-width: 850px) {
+    .hamburger { display: flex; }
+    .nav-links {
+        position: absolute; top: 100%; left: 0; width: 100%;
+        flex-direction: column; background: var(--bg-secondary);
+        overflow: hidden; max-height: 0; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); gap: 0;
+        border-bottom: 2px solid var(--accent);
+    }
+    .nav-links li { width: 100%; text-align: center; }
+    .nav-links a { display: block; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    #nav-toggle:checked ~ .navbar .nav-links { max-height: 500px; }
+
+    #nav-toggle:checked ~ .navbar .hamburger .line:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+    #nav-toggle:checked ~ .navbar .hamburger .line:nth-child(2) { opacity: 0; }
+    #nav-toggle:checked ~ .navbar .hamburger .line:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+
+    .hero-content h1 { font-size: 2.2rem; }
+    .about-flex, .form-group-row { flex-direction: column; gap: 0; }
+    .container { padding: 0 20px; }
+}
