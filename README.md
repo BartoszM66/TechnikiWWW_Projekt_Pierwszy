@@ -1,1 +1,1 @@
-# TechnikiWWW_Projekt_Pierwszy
+# Strona statyczna dla myjni samochodowej.
