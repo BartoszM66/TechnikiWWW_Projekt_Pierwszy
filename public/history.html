@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twoje Wizyty - Neon Detailing</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container nav-container">
+        <a href="index.html" class="logo">NEON<span>DETAIL</span></a>
+
+        <div class="hamburger">
+            <span class="line"></span><span class="line"></span><span class="line"></span>
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="index.html">Strona główna</a></li>
+            <li><a href="offer.html">Oferta</a></li>
+            <li><a href="about.html">O nas</a></li>
+            <li><a href="contact.html">Kontakt</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="page-content history-container">
+
+    <h3 class="section-header">Nadchodzące Wizyty</h3>
+    <div class="history-card upcoming-card">
+        <table id="upcomingTable">
+            <thead>
+            <tr>
+                <th>Data</th>
+                <th>Godzina</th>
+                <th>Usługa</th>
+                <th>Cena</th>
+                <th>Status</th>
+                <th>Akcja</th> </tr>
+            </thead>
+            <tbody id="upcomingBody"></tbody>
+        </table>
+        <div id="noUpcomingMsg" class="empty-msg" style="display: none;">Brak zaplanowanych wizyt.</div>
+    </div>
+
+    <h3 class="section-header" style="color: #888; border-color: #444;">Archiwum Wizyt</h3>
+    <div class="history-card">
+        <table id="pastTable">
+            <thead>
+            <tr>
+                <th>Data</th>
+                <th>Usługa</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody id="pastBody"></tbody>
+        </table>
+        <div id="noPastMsg" class="empty-msg" style="display: none;">Historia jest pusta.</div>
+    </div>
+
+</div>
+
+<script src="js/main.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) { window.location.href = 'login.html'; return; }
+
+        window.cancelAppointment = async (appId) => {
+            const confirmed = await confirmPopup("Czy na pewno chcesz anulować tę wizytę?");
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`/api/appointments/${appId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    await showPopup(data.message, 'success');
+                    location.reload();
+                } else {
+                    await showPopup("Błąd: " + data.message, 'error');
+                }
+            } catch (err) {
+                await showPopup("Błąd połączenia z serwerem.", 'error');
+            }
+        };
+
+        try {
+            const response = await fetch(`/api/appointments/${user.id}`);
+            const appointments = await response.json();
+
+            const upcomingBody = document.getElementById('upcomingBody');
+            const pastBody = document.getElementById('pastBody');
+            let upcomingCount = 0;
+            let pastCount = 0;
+            const now = new Date();
+
+            appointments.forEach(app => {
+                const appDate = new Date(app.date.replace(' ', 'T'));
+                const dateStr = appDate.toLocaleDateString('pl-PL');
+                const timeStr = appDate.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+
+                let statusText = app.status;
+                let statusStyle = 'color: #fff';
+
+                if (app.status === 'pending') {
+                    statusText = 'Oczekuje';
+                    statusStyle = 'color: #ffa500';
+                }
+                if (app.status === 'confirmed') {
+                    statusText = 'Potwierdzona';
+                    statusStyle = 'color: var(--accent); font-weight: bold';
+                }
+                if (app.status === 'cancelled') {
+                    statusText = 'Anulowana';
+                    statusStyle = 'color: #dc3545; text-decoration: line-through; opacity: 0.7';
+                }
+
+                if (appDate < now && app.status !== 'cancelled') {
+                    statusText = 'Zakończona';
+                    statusStyle = 'color: #007bff';
+                }
+
+                if (appDate >= now && app.status !== 'cancelled' && app.status !== 'completed') {
+                    const cancelButton = `
+                        <button onclick="cancelAppointment(${app.id})" class="btn-action btn-cancel">
+                            Anuluj
+                        </button>
+                    `;
+                    const row = `
+                        <tr>
+                            <td style="color: #fff; font-weight: bold;">${dateStr}</td>
+                            <td style="color: var(--accent); font-size: 1.1rem;">${timeStr}</td>
+                            <td>${app.service_name}</td>
+                            <td>${app.price} zł</td>
+                            <td style="${statusStyle}">${statusText}</td>
+                            <td style="text-align: center;">${cancelButton}</td>
+                        </tr>
+                    `;
+                    upcomingBody.innerHTML += row;
+                    upcomingCount++;
+                } else {
+                    const row = `
+                        <tr>
+                            <td>${dateStr} ${timeStr}</td>
+                            <td>${app.service_name}</td>
+                            <td style="${statusStyle}">${statusText}</td>
+                        </tr>
+                    `;
+                    pastBody.innerHTML += row;
+                    pastCount++;
+                }
+            });
+
+            if (upcomingCount === 0) {
+                document.getElementById('upcomingTable').style.display = 'none';
+                document.getElementById('noUpcomingMsg').style.display = 'block';
+            }
+            if (pastCount === 0) {
+                document.getElementById('pastTable').style.display = 'none';
+                document.getElementById('noPastMsg').style.display = 'block';
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+    });
+</script>
+</body>
+</html>

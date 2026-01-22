@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umów wizytę - Neon Detailing</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container nav-container">
+        <a href="index.html" class="logo">NEON<span>DETAIL</span></a>
+
+        <div class="hamburger">
+            <span class="line"></span><span class="line"></span><span class="line"></span>
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="index.html">Strona główna</a></li>
+            <li><a href="offer.html">Oferta</a></li>
+            <li><a href="about.html">O nas</a></li>
+            <li><a href="contact.html">Kontakt</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="page-content booking-container">
+    <div class="booking-box anim-fade-in">
+        <h2>Zarezerwuj Termin</h2>
+
+        <form id="bookingForm">
+            <div class="form-group">
+                <label>Wybierz Usługę</label>
+                <select id="serviceSelect" required>
+                    <option value="" disabled selected>Ładowanie usług...</option>
+                </select>
+            </div>
+
+            <div class="form-group-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>Data</label>
+                    <input type="date" id="dateInput" required>
+                </div>
+
+                <div class="form-group" style="flex: 1;">
+                    <label>Godzina</label>
+                    <select id="timeInput" required disabled>
+                        <option value="" disabled selected>Wybierz najpierw datę</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.9rem; color: #888;">
+                <span id="priceDisplay">Cena: <span style="color: #fff; font-weight: bold;">- zł</span></span>
+                <span id="durationDisplay">Czas trwania: <span style="color: #fff; font-weight: bold;">-</span></span>
+                <span id="endTimeDisplay">Zakończenie: <span style="color: var(--accent); font-weight: bold;">--:--</span></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Potwierdź Rezerwację</button>
+        </form>
+    </div>
+</div>
+
+<footer class="footer">
+    &copy; 2023 Neon Detailing. Wszelkie prawa zastrzeżone.
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) { window.location.href = 'login.html'; return; }
+
+        const serviceSelect = document.getElementById('serviceSelect');
+        const dateInput = document.getElementById('dateInput');
+        const timeSelect = document.getElementById('timeInput');
+        const bookingForm = document.getElementById('bookingForm');
+        const priceSpan = document.querySelector('#priceDisplay span');
+        const durationSpan = document.querySelector('#durationDisplay span');
+        const endTimeSpan = document.querySelector('#endTimeDisplay span');
+
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+        dateInput.value = today;
+
+        let servicesData = [];
+        try {
+            const res = await fetch('/api/services');
+            servicesData = await res.json();
+
+            serviceSelect.innerHTML = '<option value="" disabled selected>-- Wybierz usługę --</option>';
+            servicesData.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                serviceSelect.appendChild(opt);
+            });
+        } catch (e) { console.error(e); }
+
+        async function fetchAvailableSlots() {
+            const serviceId = serviceSelect.value;
+            const date = dateInput.value;
+
+            timeSelect.innerHTML = '<option value="" disabled selected>-- Wybierz godzinę --</option>';
+            timeSelect.disabled = true;
+            endTimeSpan.textContent = '--:--';
+
+            if (!serviceId || !date) return;
+
+            const loadingOpt = document.createElement('option');
+            loadingOpt.textContent = "Sprawdzam grafik...";
+            timeSelect.appendChild(loadingOpt);
+
+            try {
+                const url = `/api/slots?date=${date}&service_id=${serviceId}`;
+                const res = await fetch(url);
+                const slots = await res.json();
+
+                timeSelect.innerHTML = '<option value="" disabled selected>-- Wybierz godzinę --</option>';
+
+                if (slots.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.textContent = "Brak wolnych terminów";
+                    opt.disabled = true;
+                    timeSelect.appendChild(opt);
+                } else {
+                    slots.forEach(time => {
+                        const opt = document.createElement('option');
+                        opt.value = time;
+                        opt.textContent = time;
+                        timeSelect.appendChild(opt);
+                    });
+                    timeSelect.disabled = false;
+                }
+                updatePriceDuration();
+            } catch (err) {
+                console.error(err);
+                timeSelect.innerHTML = '<option>Błąd serwera</option>';
+            }
+        }
+
+        function updatePriceDuration() {
+            const sId = parseInt(serviceSelect.value);
+            const service = servicesData.find(s => s.id === sId);
+            if (service) {
+                priceSpan.textContent = `${service.price} zł`;
+                durationSpan.textContent = `${service.duration} min`;
+                if (service.duration > 480) {
+                    durationSpan.textContent += " (Usługa wielodniowa)";
+                    durationSpan.style.color = "var(--accent)";
+                } else {
+                    durationSpan.style.color = "#fff";
+                }
+            }
+        }
+
+        function calculateEndTime() {
+            const time = timeSelect.value;
+            const sId = parseInt(serviceSelect.value);
+            const service = servicesData.find(s => s.id === sId);
+
+            if (time && service) {
+                const [h, m] = time.split(':').map(Number);
+                const totalMinutes = h * 60 + m + service.duration;
+
+                if (totalMinutes > 18 * 60) {
+                    endTimeSpan.textContent = "Zakończenie w kolejnym dniu roboczym";
+                    endTimeSpan.style.color = "var(--accent)";
+                } else {
+                    const endH = Math.floor(totalMinutes / 60);
+                    const endM = totalMinutes % 60;
+                    endTimeSpan.textContent = `${endH}:${endM.toString().padStart(2,'0')}`;
+                    endTimeSpan.style.color = "#fff";
+                }
+            }
+        }
+
+        serviceSelect.addEventListener('change', fetchAvailableSlots);
+
+        dateInput.addEventListener('change', async () => {
+            const selectedDate = new Date(dateInput.value);
+            const day = selectedDate.getDay();
+
+            if (day === 0 || day === 6) {
+                await showPopup("W weekendy nasze studio jest zamknięte.\nZapraszamy od poniedziałku do piątku!", 'error');
+                dateInput.value = '';
+                timeSelect.innerHTML = '<option value="" disabled selected>Wybierz poprawną datę</option>';
+                timeSelect.disabled = true;
+                return;
+            }
+            fetchAvailableSlots();
+        });
+
+        timeSelect.addEventListener('change', calculateEndTime);
+
+        bookingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                user_id: user.id,
+                service_id: serviceSelect.value,
+                date: dateInput.value,
+                time: timeSelect.value
+            };
+
+            const res = await fetch('/api/appointments', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            if (res.ok) {
+                await showPopup(result.message, 'success');
+                window.location.href = 'history.html';
+            } else {
+                await showPopup(result.message, 'error');
+                fetchAvailableSlots();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

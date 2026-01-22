@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administratora - Neon Detailing</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container nav-container">
+        <a href="admin_panel.html" class="logo">NEON<span>PANEL</span></a>
+
+        <ul class="admin-nav">
+            <li>
+                <a href="#" id="adminLogoutBtn" style="color: #dc3545; border: 1px solid #dc3545; padding: 8px 15px; border-radius: 4px; text-transform: uppercase; font-weight: bold; transition: 0.3s;">
+                    Wyloguj
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="page-content container">
+    <div class="admin-header">
+        <h2 style="text-transform: uppercase;">Panel Zarządzania</h2>
+        <div style="color: #888;">Administrator</div>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-number" id="statPending">0</div>
+            <div class="stat-label">Do potwierdzenia</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="statConfirmed">0</div>
+            <div class="stat-label">Potwierdzone</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="statToday">0</div>
+            <div class="stat-label">Dziś w grafiku</div>
+        </div>
+    </div>
+
+    <h3 style="margin-bottom: 20px; color: var(--accent);">Grafik (Najbliższe 7 dni)</h3>
+    <div class="calendar-wrapper">
+        <div class="calendar-header">
+            <span>Godziny pracy: 08:00 - 18:00</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+        </div>
+    </div>
+
+    <h3 style="margin-bottom: 20px; color: var(--accent);">Lista Szczegółowa</h3>
+    <div class="admin-table-wrapper">
+        <table id="adminTable">
+            <thead>
+            <tr>
+                <th>Data</th>
+                <th>Klient</th>
+                <th>Usługa</th>
+                <th>Cena</th>
+                <th>Status</th>
+                <th>Akcje</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="loading" class="empty-msg">Ładowanie danych...</div>
+    </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'admin') {
+            await showPopup("Brak uprawnień!", 'error');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const tableBody = document.getElementById('tableBody');
+        const loading = document.getElementById('loading');
+        const calendarGrid = document.getElementById('calendarGrid');
+
+        window.updateStatus = async (id, newStatus) => {
+            let statusPL = newStatus;
+            if(newStatus === 'confirmed') statusPL = 'Potwierdzona';
+            if(newStatus === 'completed') statusPL = 'Zakończona';
+            if(newStatus === 'cancelled') statusPL = 'Anulowana';
+
+            const confirmed = await confirmPopup(`Czy zmienić status wizyty na:\n${statusPL}?`);
+            if(!confirmed) return;
+
+            try {
+                await fetch(`/api/appointments/${id}/status`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ status: newStatus })
+                });
+                loadData();
+            } catch (err) {
+                await showPopup("Błąd serwera", 'error');
+            }
+        };
+
+        async function loadData() {
+            try {
+                const res = await fetch('/api/admin/appointments');
+                const data = await res.json();
+
+                loading.style.display = 'none';
+
+                renderTable(data);
+                renderStats(data);
+                renderCalendar(data);
+
+            } catch (err) {
+                console.error(err);
+                loading.textContent = "Błąd.";
+            }
+        }
+
+        function renderStats(data) {
+            let pending = 0, confirmed = 0, todayCount = 0;
+            const todayDate = new Date().toISOString().split('T')[0];
+
+            data.forEach(app => {
+                if(app.status === 'pending') pending++;
+                if(app.status === 'confirmed') confirmed++;
+                if(app.date.startsWith(todayDate) && app.status !== 'cancelled') todayCount++;
+            });
+
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statConfirmed').textContent = confirmed;
+            document.getElementById('statToday').textContent = todayCount;
+        }
+
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+
+            data.forEach(app => {
+                const appDateObj = new Date(app.date.replace(' ', 'T'));
+                const dateStr = appDateObj.toLocaleDateString('pl-PL');
+                const timeStr = appDateObj.toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'});
+
+                let actions = '';
+                if(app.status === 'pending') {
+                    actions = `
+                        <button class="btn-action btn-confirm" onclick="updateStatus(${app.id}, 'confirmed')">Potwierdź</button>
+                        <button class="btn-action btn-cancel" onclick="updateStatus(${app.id}, 'cancelled')">Anuluj</button>
+                    `;
+                } else if(app.status === 'confirmed') {
+                    actions = `
+                        <button class="btn-action btn-complete" onclick="updateStatus(${app.id}, 'completed')">Zakończ</button>
+                        <button class="btn-action btn-cancel" onclick="updateStatus(${app.id}, 'cancelled')">Anuluj</button>
+                    `;
+                } else {
+                    actions = '<span style="color:#666">-</span>';
+                }
+
+                let color = '#fff';
+                if(app.status === 'confirmed') color = 'var(--accent)';
+                if(app.status === 'cancelled') color = '#dc3545';
+                if(app.status === 'completed') color = '#007bff';
+
+                let statusDisplay = app.status;
+                if(app.status === 'pending') statusDisplay = 'Oczekuje';
+                if(app.status === 'confirmed') statusDisplay = 'Potwierdzona';
+                if(app.status === 'completed') statusDisplay = 'Zakończona';
+                if(app.status === 'cancelled') statusDisplay = 'Anulowana';
+
+                const row = `
+                    <tr>
+                        <td><strong>${dateStr}</strong><br>${timeStr}</td>
+                        <td>${app.user_name}<br><a href="tel:${app.user_phone}" class="phone-link">${app.user_phone}</a></td>
+                        <td>${app.service_name}</td>
+                        <td>${app.price} zł</td>
+                        <td style="color:${color}; text-transform:uppercase; font-size:0.8rem; font-weight:bold;">${statusDisplay}</td>
+                        <td style="white-space: nowrap;">${actions}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function renderCalendar(appointments) {
+            calendarGrid.innerHTML = '';
+
+            const timeCol = document.createElement('div');
+            timeCol.className = 'time-labels';
+            const dummyHeader = document.createElement('div');
+            dummyHeader.style.height = '40px';
+            dummyHeader.style.borderBottom = '1px solid #333';
+            timeCol.appendChild(dummyHeader);
+
+            for(let h=8; h<18; h++) {
+                const label = document.createElement('div');
+                label.className = 'time-label';
+                label.textContent = `${h}:00`;
+                timeCol.appendChild(label);
+            }
+            calendarGrid.appendChild(timeCol);
+
+            const today = new Date();
+            const daysToShow = 7;
+
+            for(let i=0; i<daysToShow; i++) {
+                const currentDay = new Date(today);
+                currentDay.setDate(today.getDate() + i);
+
+                const dateKey = currentDay.toISOString().split('T')[0];
+                const dayName = currentDay.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'numeric' });
+
+                const dayCol = document.createElement('div');
+                dayCol.className = 'day-column';
+                dayCol.innerHTML = `<div class="day-header">${dayName}</div>`;
+
+                for(let h=8; h<18; h++) {
+                    const gridLine = document.createElement('div');
+                    gridLine.className = 'hour-grid-line';
+                    dayCol.appendChild(gridLine);
+                }
+
+                const daysApps = appointments.filter(app => app.date.startsWith(dateKey) && app.status !== 'cancelled');
+
+                daysApps.forEach(app => {
+                    const appTime = new Date(app.date.replace(' ', 'T'));
+                    const hour = appTime.getHours();
+                    const minutes = appTime.getMinutes();
+                    const duration = app.duration;
+
+                    const startOffset = (hour - 8) * 60 + minutes;
+                    const height = duration;
+
+                    const block = document.createElement('div');
+                    block.className = `event-block evt-${app.status}`;
+                    block.style.top = (40 + startOffset) + 'px';
+                    block.style.height = height + 'px';
+
+                    block.innerHTML = `<strong>${app.user_name}</strong><br>${app.service_name}`;
+                    block.title = `${hour}:${minutes} - ${app.service_name} (${app.status})`;
+
+                    block.onclick = async () => {
+                        await showPopup(`Klient: ${app.user_name}\nTel: ${app.user_phone}\nUsługa: ${app.service_name}\nCena: ${app.price} zł`, 'success');
+                    };
+
+                    dayCol.appendChild(block);
+                });
+
+                calendarGrid.appendChild(dayCol);
+            }
+        }
+
+        loadData();
+    });
+</script>
+
+</body>
+</html>

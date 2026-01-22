@@ -1,32 +1,63 @@
-# Strona statyczna dla myjni samochodowej.
+# Neon Detailing - System Rezerwacji
 
-User story - 1 - Intuicyjna nawigacja 
-Jako użytkownik strony chcę mieć stały dostęp do paska nawigacyjnego u góry ekranu, aby w dowolnym momencie móc przeskoczyć między stroną startową, ofertą, informacjami o firmie i kontaktem.
+Profesjonalna aplikacja webowa do obsługi studia auto detailingu. System umożliwia klientom przeglądanie oferty i rezerwację terminów online, a administratorowi zarządzanie harmonogramem prac.
 
-User story - 2 - Obsługa na urządzeniach mobilnych 
-Jako użytkownik smartfona chcę, aby menu na małym ekranie było ukryte pod ikoną „hamburgera” i rozwijało się płynnie po kliknięciu, aby nawigacja nie zasłaniała mi treści strony i była wygodna w obsłudze kciukiem.
+## Główne Funkcjonalności
 
-User story - 3 - Szybkie zrozumienie oferty 
-Jako nowy odwiedzający chcę na stronie głównej od razu zobaczyć zachęcające zdjęcie studia oraz jasny komunikat czym zajmuje się firma, aby wiedzieć, że trafiłem we właściwe miejsce i móc jednym kliknięciem przejść do oferty.
+### Panel Klienta
+* **Rejestracja i Logowanie:** Bezpieczne uwierzytelnianie użytkowników.
+* **Rezerwacja Wizyt:** Wybór usługi, daty i godziny (z walidacją weekendów i zajętych terminów).
+* **Historia Wizyt:** Przegląd nadchodzących i zakończonych usług.
+* **Anulowanie:** Możliwość odwołania wizyty (do 48h przed terminem).
 
-User story - 4 - Przeglądanie listy usług 
-Jako klient zainteresowany detailingiem chcę widzieć wszystkie usługi ułożone w czytelnej siatce kafelków ze zdjęciami, aby szybko zorientować się, jakie zabiegi są dostępne (np. Korekta, Ceramika, Wnętrze).
+### Panel Administratora
+* **Dashboard:** Statystyki wizyt (oczekujące, potwierdzone, dzisiejsze).
+* **Kalendarz Graficzny:** Wizualny podgląd harmonogramu na najbliższe 7 dni.
+* **Zarządzanie:** Potwierdzanie, kończenie lub anulowanie wizyt klientów.
 
-User story - 5 - Szczegóły usługi bez przeładowania
-Jako klient chcę po kliknięciu w kafelek usługi zobaczyć wyskakujące okienko z dokładnym opisem, ceną i czasem trwania, aby poznać szczegóły bez konieczności opuszczania strony z ofertą i błądzenia po podstronach.
+## Technologie
 
-User story - 6 - Odporność na błędy ładowania 
-Jako użytkownik ze słabszym łączem internetowym chcę widzieć estetyczną ramkę z czytelnym podpisem, jeśli zdjęcie usługi się nie załaduje, aby mimo problemów technicznych wiedzieć, czego dotyczy dany kafelek w ofercie.
+**Backend:**
+* Node.js
+* Express.js 
+* SQLite3 
+* Bcrypt 
 
-User story - 7 - Budowanie zaufania 
-Jako niezdecydowany klient chcę przeczytać o doświadczeniu zespołu, aby upewnić się, że oddaję swój samochód w ręce profesjonalistów, a nie amatorów.
+**Frontend:**
+* HTML5, CSS3 
+* JavaScript 
 
-User story - 8 - Dostęp do danych teleadresowych
-Jako klient zdecydowany na wizytę chcę szybko znaleźć adres, godziny otwarcia i numer telefonu w sekcji Kontakt, aby móc wpisać cel w nawigację lub zadzwonić bezpośrednio z telefonu.
+## Wymagania
 
-User story - 9 - Dedykowany formularz wyceny
-Jako klient preferujący kontakt online chcę wysłać zapytanie przez formularz, wybierając z listy konkretny typ mojego auta i interesującą mnie usługę, aby otrzymać precyzyjną wycenę bez konieczności opisywania wszystkiego ręcznie w mailu.
+* Node.js (wersja 14 lub nowsza)
+* npm (Node Package Manager)
 
-User story - 10 - Informacja zwrotna przy wypełnianiu formularza 
-Jako użytkownik wypełniający formularz chcę widzieć kolorowe ramki (zielone/czerwone) informujące mnie, czy poprawnie wpisałem e-mail lub czy nie pominąłem ważnego pola, aby uniknąć wysłania błędnego lub pustego zgłoszenia.
+## Instalacja i Uruchomienie
 
+Projekt zawiera już **wstępnie skonfigurowaną bazę danych** z kontem administratora. Nie ma potrzeby uruchamiania skryptów inicjalizujących (`seed.js`), aby nie nadpisać istniejących danych.
+
+1. **Zainstaluj zależności:**
+   Otwórz terminal w folderze projektu i wpisz:
+   ```bash
+   npm install
+
+2. **Uruchom serwer:**
+   W terminalu wpisz:
+   ```bash
+   npm start
+
+3. **Otwórz aplikację:**
+   Przejdź w przeglądarce pod adres: http://localhost:3000
+
+
+## Konto administratora do testów
+
+W bazie danych istnieje już skonfigurowane konto z uprawnieniami administratora. Aby dostać się do panelu zarządzania, zaloguj się przy użyciu istniejącego konta administratora:
+
+    Email: admin@email.com
+    Hasło: admin123
+
+Uwaga: System automatycznie wykrywa rolę użytkownika i po zalogowaniu na powyższe dane przekieruje Cię bezpośrednio do admin_panel.html.
+
+
+## Jako że nie tworzyłem nowego repozytorium dla drugiego projektu tylko rozszerzałem obecny projekt, kopia pierwszego projektu jest w drugim branchu "Pierwszy-projekt"
